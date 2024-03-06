@@ -11,10 +11,10 @@ import {
 import { NavigationTheme } from 'react-native-paper/lib/typescript/types';
 
 const LIGHT_PALLETE = {
-    primary: "#F44336",
+    primary: "#E02619",
     darkPrimary: "#D32F2F",
     lightPrimary: "#FFCDD2",
-    secondary: "#b01105",
+    secondary: "#991B12",
     background: "#EDEDED",
     tertiary: "#FF9800",
     text: "#212121",
