@@ -1,58 +1,64 @@
-import deepmerge from "deepmerge";
-import { StyleSheet, View } from "react-native";
-import { IconButton, IconButtonProps, Text, useTheme } from "react-native-paper";
+import deepmerge from 'deepmerge';
+import {StyleSheet, View} from 'react-native';
+import {IconButton, IconButtonProps, Text, useTheme} from 'react-native-paper';
+import {ViewProps} from 'react-native-svg/lib/typescript/fabric/utils';
 
 const ICON_SIZE = 40;
-const ICON_PADDING = 8 * 2;
-const ICON_TOTALSIZE = ICON_SIZE + ICON_PADDING;
-const DPAD_CONTAINER_SIZE = ICON_TOTALSIZE * 2.25;
+
+export type RotatePadProps = {
+  name?: string;
+  buttonSize?: number;
+};
 
 function RotatePadButton(props: IconButtonProps) {
-    const theme = useTheme();
+  const theme = useTheme();
 
-    return (
-        <IconButton {...props}
-            style={deepmerge(style.iconButton, (props.style as any) ?? {})}
-            size={ICON_SIZE}
-            iconColor={theme.colors.onBackground}
-        />
-    )
+  return (
+    <IconButton
+      {...props}
+      style={[style.iconButton, props.style]}
+      iconColor={theme.colors.onBackground}
+    />
+  );
 }
 
-export default function RotatePad() {
-    return (
-        <View>
-            <View style={style.container}>
-                <RotatePadButton
-                    onPressIn={() => console.log("Left")}
-                    icon={"rotate-left"}
-                />
+export default function RotatePad({
+  name,
+  buttonSize = ICON_SIZE,
+  ...props
+}: RotatePadProps & ViewProps) {
+  return (
+    <View {...props}>
+      <View style={style.container}>
+        <RotatePadButton
+          onPressIn={() => console.log('Left')}
+          icon={'rotate-left'}
+          size={buttonSize}
+        />
 
-                <RotatePadButton
-                    onPressIn={() => console.log("Right")}
-                    icon={"rotate-right"}
-                />
-            </View>
+        <RotatePadButton
+          onPressIn={() => console.log('Right')}
+          icon={'rotate-right'}
+          size={buttonSize}
+        />
+      </View>
 
-            <Text style={style.label}>
-                Rotate
-            </Text>
-        </View>
-    )
+      {name && <Text style={style.label}>{name}</Text>}
+    </View>
+  );
 }
 
 const style = StyleSheet.create({
-    container: {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        flexGrow: 1,
-        gap: 10
-    },
-    label: {
-        textAlign: "center"
-    },
-    iconButton: {
-        margin: 0,
-    }
-})
+  container: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexGrow: 1,    
+  },
+  label: {
+    textAlign: 'center',
+  },
+  iconButton: {
+    margin: 0,
+  },
+});

@@ -9,7 +9,7 @@ export default function Home() {
         <Tab.Navigator
             barStyle={{
                 borderColor: "#00000022",
-                borderWidth: 1
+                borderWidth: 1                
             }}>
             <Tab.Screen
                 name="Controller"

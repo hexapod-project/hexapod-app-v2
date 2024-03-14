@@ -11,7 +11,7 @@ import {
 import { NavigationTheme } from 'react-native-paper/lib/typescript/types';
 
 const LIGHT_PALLETE = {
-    primary: "#E02619",
+    primary: "#D02619",
     darkPrimary: "#D32F2F",
     lightPrimary: "#FFCDD2",
     secondary: "#991B12",
@@ -32,7 +32,7 @@ const { LightTheme, DarkTheme } = adaptNavigationTheme({
 
 export const AppLightTheme: MD3Theme & NavigationTheme = {
     ...PaperLightTheme,
-    ...LightTheme,
+    ...LightTheme,    
     colors: {
         ...PaperLightTheme.colors,
         ...LightTheme.colors,
@@ -54,7 +54,7 @@ export const AppLightTheme: MD3Theme & NavigationTheme = {
         onErrorContainer: LIGHT_PALLETE.white,
         background: LIGHT_PALLETE.background,
         onBackground: LIGHT_PALLETE.text,
-        surface: LIGHT_PALLETE.background,
+        surface: LIGHT_PALLETE.white,
         onSurface: LIGHT_PALLETE.text,
         surfaceVariant: LIGHT_PALLETE.background,
         onSurfaceVariant: LIGHT_PALLETE.text,
