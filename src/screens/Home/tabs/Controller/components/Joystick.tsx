@@ -4,6 +4,8 @@ import {Circle, Svg} from 'react-native-svg';
 import {Animated} from 'react-native';
 import {useEffect, useRef} from 'react';
 import {ViewProps} from 'react-native-svg/lib/typescript/fabric/utils';
+import {usePanResponder} from '../../../../../hooks/usePanResponder';
+import {Vector} from '../../../../../types/Vector';
 
 const JOYSTICK_SIZE = 50;
 const JOYSTICK_RADIUS = JOYSTICK_SIZE / 2;
@@ -21,44 +23,37 @@ export default function Joystick({name, ...props}: JoystickProps & ViewProps) {
   const theme = useTheme();
   const style = createStyle(theme);
 
-  const center = {
+  const center: Vector = new Vector({
     x: VIEW_SIZE / 2,
     y: VIEW_SIZE / 2,
-  };
+  });
 
-  const pan = useRef(new Animated.ValueXY()).current;
-  const position = useRef(new Animated.ValueXY(center)).current;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: Animated.event([null, {dx: pan.x, dy: pan.y}], {
-        useNativeDriver: false,
-      }),
+  let {panResponder, pan, x, y} = usePanResponder({
+    config: {
       onPanResponderRelease: () => {
         Animated.spring(pan, {
           useNativeDriver: false,
           toValue: {x: 0, y: 0},
         }).start();
       },
-    }),
-  ).current;
+    },
+  });
+
+  const position = useRef(new Animated.ValueXY(center)).current;
 
   useEffect(() => {
-    position.flattenOffset();
-    position.setValue(center);
     position.setOffset(center);
-    
-    pan.addListener(({x, y}) => {
-      if (x * x + y * y > CONTAINER_RADIUS * CONTAINER_RADIUS) {
-        const angle = Math.atan2(y, x);
-        x = Math.cos(angle) * CONTAINER_RADIUS;
-        y = Math.sin(angle) * CONTAINER_RADIUS;
-      }
-
-      position.setValue({x, y});
-    });
   }, []);
+
+  useEffect(() => {
+    if (x * x + y * y > CONTAINER_RADIUS * CONTAINER_RADIUS) {
+      const angle = Math.atan2(y, x);
+      x = Math.cos(angle) * CONTAINER_RADIUS;
+      y = Math.sin(angle) * CONTAINER_RADIUS;
+    }
+
+    position.setValue({x, y});
+  }, [x, y]);
 
   return (
     <View {...props} style={[style.joystickContainer, props.style]}>
@@ -89,7 +84,7 @@ export default function Joystick({name, ...props}: JoystickProps & ViewProps) {
           cx={position.x}
           cy={position.y}
           r={JOYSTICK_RADIUS - 2}
-          fill={theme.colors.onBackground}
+          fill={theme.colors.elevation.level3}
           {...panResponder.panHandlers}
         />
       </Svg>

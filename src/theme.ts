@@ -67,11 +67,11 @@ export const AppLightTheme: MD3Theme & NavigationTheme = {
         inversePrimary: LIGHT_PALLETE.lightPrimary,
         elevation: {
             level0: "transparent",
-            level1: LIGHT_PALLETE.white,
-            level2: LIGHT_PALLETE.white,
-            level3: LIGHT_PALLETE.white,
-            level4: LIGHT_PALLETE.white,
-            level5: LIGHT_PALLETE.white
+            level1: "#FFFFFF88",
+            level2: "#FFFFFF",
+            level3: "#AAA",
+            level4: "#888",
+            level5: "#666"
         },
         surfaceDisabled: LIGHT_PALLETE.lightPrimary,
         onSurfaceDisabled: LIGHT_PALLETE.text,
