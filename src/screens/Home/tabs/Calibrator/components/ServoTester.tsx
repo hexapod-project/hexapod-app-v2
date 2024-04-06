@@ -1,5 +1,5 @@
 import {CircleSlider} from '@edw-lee/react-native-circle-slider';
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {LayoutChangeEvent, StyleSheet, View} from 'react-native';
 import {Button, IconButton, Text, useTheme} from 'react-native-paper';
 import {clamp, map} from '../../../../../utils/number.utils';
@@ -7,15 +7,25 @@ import {
   MAX_SERVO_ANGLE,
   MIN_SERVO_ANGLE,
 } from '../../../../../constants/Calibrator.constants';
+import {useBLEService} from '../../../../../components/BLEServiceProvider/BLEServiceProvider';
+import {
+  CALIBRATE_SERVICE_UUID,
+  MOVE_SERVO_CHARACTERISTIC_UUID,
+} from '../../../../../constants/BLE.constants';
 
 const OFFSET_ANGLE = 15;
 const MAX_ANGLE = 150;
 const SLIDER_SIZE = 70;
 
-export default function ServoTester() {
+export type ServoTesterProps = {
+  activeJoint: number;
+};
+
+export default function ServoTester({activeJoint}: ServoTesterProps) {
   const theme = useTheme();
-  const [angle, setAngle] = useState(0);
+  const [angle, setAngle] = useState(MAX_ANGLE / 2);
   const [height, setHeight] = useState(0);
+  const bleService = useBLEService();
 
   const onCircleSliderUpdate = (newAngle: number) => {
     setAngle(newAngle);
@@ -54,6 +64,14 @@ export default function ServoTester() {
     [displayAngle],
   );
 
+  const onMovePress = useCallback(() => {
+    bleService.writeCharacteristicWithoutResponse(
+      CALIBRATE_SERVICE_UUID,
+      MOVE_SERVO_CHARACTERISTIC_UUID,
+      `${activeJoint}|${displayAngle}`,
+    );
+  }, [activeJoint, displayAngle]);
+
   return (
     <View style={styles.container}>
       <CircleSlider
@@ -89,7 +107,7 @@ export default function ServoTester() {
         style={styles.button}
         mode="contained"
         buttonColor={theme.colors.primary}
-        onPress={() => {}}>
+        onPress={onMovePress}>
         Move
       </Button>
     </View>

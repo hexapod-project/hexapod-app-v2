@@ -1,6 +1,6 @@
 import {LayoutChangeEvent, StyleSheet, View} from 'react-native';
 import {Button, IconButton, Text, useTheme} from 'react-native-paper';
-import {useCallback, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {CircleSlider} from '@edw-lee/react-native-circle-slider';
 import {clamp, map} from '../../../../../utils/number.utils';
 import {
@@ -8,17 +8,28 @@ import {
   MIN_PWM_PERIOD,
 } from '../../../../../constants/Calibrator.constants';
 import {degToRad} from '../../../../../utils/geometry.util';
+import {useBLEService} from '../../../../../components/BLEServiceProvider/BLEServiceProvider';
+import {
+  CALIBRATE_SERVICE_UUID,
+  SET_PWM_PERIOD_CHARACTERISTIC_UUID,
+} from '../../../../../constants/BLE.constants';
 
 const OFFSET_ANGLE = -45;
 const MAX_ANGLE = 270;
 const SLIDER_SIZE = 50;
 
-export default function PWMPeriodCalibrator() {
-  const theme = useTheme();
+export type PWMPeriodCalibratorProps = {
+  activeJoint: number;
+};
 
-  const [angle, setAngle] = useState(0);
+export default function PWMPeriodCalibrator({
+  activeJoint,
+}: PWMPeriodCalibratorProps) {
+  const theme = useTheme();
+  const [angle, setAngle] = useState(MAX_ANGLE / 2);
   const [height, setHeight] = useState(0);
   const [heigthOffset, setHeightOffset] = useState(0);
+  const bleService = useBLEService();
 
   const onCircleSliderUpdate = (_angle: number) => {
     setAngle(_angle);
@@ -61,6 +72,14 @@ export default function PWMPeriodCalibrator() {
     [pwm],
   );
 
+  const onCalibratePress = useCallback(() => {
+    bleService.writeCharacteristicWithoutResponse(
+      CALIBRATE_SERVICE_UUID,
+      SET_PWM_PERIOD_CHARACTERISTIC_UUID,
+      `${activeJoint}|${pwm}`,
+    );
+  }, [pwm, activeJoint]);
+
   return (
     <View style={styles.container}>
       <View style={styles.circleSliderContainer}>
@@ -98,7 +117,7 @@ export default function PWMPeriodCalibrator() {
       <Button
         mode="contained"
         buttonColor={theme.colors.primary}
-        onPress={() => {}}>
+        onPress={onCalibratePress}>
         Calibrate
       </Button>
     </View>

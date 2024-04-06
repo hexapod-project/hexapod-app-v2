@@ -1,15 +1,15 @@
 import {StyleSheet, View} from 'react-native';
-import Joystick from './components/Joystick';
-import DPad from './components/DPad';
+import RollPitchJoystick from './components/RollPitchJoystick';
+import MoveDPad from './components/MoveDPad';
 import RotatePad from './components/RotatePad';
 
 export default function Controller() {
   return (
     <View style={style.controllerContainer}>
-      <DPad name={'Move'} buttonSize={80} />
+      <MoveDPad name={'Move'} buttonSize={80} />
 
       <View style={style.bottomClusterContainer}>
-        <Joystick name={'Roll & Pitch'} />
+        <RollPitchJoystick name={'Roll & Pitch'} />
 
         <RotatePad name={'Rotate'} buttonSize={50} />
       </View>

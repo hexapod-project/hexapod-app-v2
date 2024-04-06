@@ -2,6 +2,12 @@ import deepmerge from 'deepmerge';
 import {StyleSheet, View} from 'react-native';
 import {IconButton, IconButtonProps, Text, useTheme} from 'react-native-paper';
 import {ViewProps} from 'react-native-svg/lib/typescript/fabric/utils';
+import {useBLEService} from '../../../../../components/BLEServiceProvider/BLEServiceProvider';
+import {
+  MOTION_SERVICE_UUID,
+  ROTATE_CHARACTERISTIC_UUID,
+} from '../../../../../constants/BLE.constants';
+import {ROTATE_DIRECTION} from '../../../../../enums/Controller.enums';
 
 const ICON_SIZE = 40;
 
@@ -27,17 +33,29 @@ export default function RotatePad({
   buttonSize = ICON_SIZE,
   ...props
 }: RotatePadProps & ViewProps) {
+  const bleService = useBLEService();
+
+  const onPress = (rotateDirection: ROTATE_DIRECTION) => {
+    bleService.writeCharacteristicWithoutResponse(
+      MOTION_SERVICE_UUID,
+      ROTATE_CHARACTERISTIC_UUID,
+      rotateDirection.toString(),
+    );
+  };
+
   return (
     <View {...props}>
       <View style={style.container}>
         <RotatePadButton
-          onPressIn={() => console.log('Left')}
+          onPressIn={() => onPress(ROTATE_DIRECTION.ROTATE_LEFT)}
+          onPressOut={() => onPress(ROTATE_DIRECTION.STOP)}
           icon={'rotate-left'}
           size={buttonSize}
         />
 
         <RotatePadButton
-          onPressIn={() => console.log('Right')}
+          onPressIn={() => onPress(ROTATE_DIRECTION.ROTATE_RIGHT)}
+          onPressOut={() => onPress(ROTATE_DIRECTION.STOP)}
           icon={'rotate-right'}
           size={buttonSize}
         />
@@ -53,7 +71,7 @@ const style = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    flexGrow: 1,    
+    flexGrow: 1,
   },
   label: {
     textAlign: 'center',

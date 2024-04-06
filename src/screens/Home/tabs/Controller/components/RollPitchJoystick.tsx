@@ -2,10 +2,20 @@ import {PanResponder, StyleSheet, View} from 'react-native';
 import {Icon, MD3Theme, Text, useTheme} from 'react-native-paper';
 import {Circle, Svg} from 'react-native-svg';
 import {Animated} from 'react-native';
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {ViewProps} from 'react-native-svg/lib/typescript/fabric/utils';
 import {usePanResponder} from '../../../../../hooks/usePanResponder';
 import {Vector} from '../../../../../types/Vector';
+import {
+  clampTo360Deg,
+  radToDeg,
+  toPositiveDeg,
+} from '../../../../../utils/geometry.util';
+import {useBLEService} from '../../../../../components/BLEServiceProvider/BLEServiceProvider';
+import {
+  MOTION_SERVICE_UUID,
+  ROLLPITCH_CHARACTERISTIC_UUID,
+} from '../../../../../constants/BLE.constants';
 
 const JOYSTICK_SIZE = 50;
 const JOYSTICK_RADIUS = JOYSTICK_SIZE / 2;
@@ -19,18 +29,37 @@ export type JoystickProps = {
   name?: string;
 };
 
-export default function Joystick({name, ...props}: JoystickProps & ViewProps) {
+export default function RollPitchJoystick({
+  name,
+  ...props
+}: JoystickProps & ViewProps) {
   const theme = useTheme();
   const style = createStyle(theme);
+  const bleService = useBLEService();
+  const [roundedAngle, setRoundedAngle] = useState(-1);
+  const [isReleased, setIsReleased] = useState(true);
 
   const center: Vector = new Vector({
     x: VIEW_SIZE / 2,
     y: VIEW_SIZE / 2,
   });
 
+  const onAngleChanged = (angle: number) => {
+    bleService.writeCharacteristicWithoutResponse(
+      MOTION_SERVICE_UUID,
+      ROLLPITCH_CHARACTERISTIC_UUID,
+      angle.toString(),
+    );
+  };
+
   let {panResponder, pan, x, y} = usePanResponder({
     config: {
+      onPanResponderGrant: () => {
+        setIsReleased(false);
+      },
       onPanResponderRelease: () => {
+        setIsReleased(true);
+
         Animated.spring(pan, {
           useNativeDriver: false,
           toValue: {x: 0, y: 0},
@@ -46,14 +75,27 @@ export default function Joystick({name, ...props}: JoystickProps & ViewProps) {
   }, []);
 
   useEffect(() => {
+    onAngleChanged(roundedAngle);
+  }, [roundedAngle]);
+
+  useEffect(() => {
+    const angle = Math.atan2(y, x);
+
     if (x * x + y * y > CONTAINER_RADIUS * CONTAINER_RADIUS) {
-      const angle = Math.atan2(y, x);
       x = Math.cos(angle) * CONTAINER_RADIUS;
       y = Math.sin(angle) * CONTAINER_RADIUS;
     }
 
+    const roundedDeg = Math.ceil(radToDeg(-angle) / 10) * 10;
+
+    if (!isReleased) {
+      setRoundedAngle(toPositiveDeg(clampTo360Deg(roundedDeg)));
+    } else {
+      setRoundedAngle(-1);
+    }
+
     position.setValue({x, y});
-  }, [x, y]);
+  }, [x, y, isReleased]);
 
   return (
     <View {...props} style={[style.joystickContainer, props.style]}>
@@ -84,7 +126,7 @@ export default function Joystick({name, ...props}: JoystickProps & ViewProps) {
           cx={position.x}
           cy={position.y}
           r={JOYSTICK_RADIUS - 2}
-          fill={theme.colors.elevation.level3}
+          fill={theme.colors.elevation.level5}
           {...panResponder.panHandlers}
         />
       </Svg>
