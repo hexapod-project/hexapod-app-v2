@@ -16,6 +16,7 @@ import {
   MOTION_SERVICE_UUID,
   ROLLPITCH_CHARACTERISTIC_UUID,
 } from '../../../../../constants/BLE.constants';
+import base64 from 'react-native-base64';
 
 const JOYSTICK_SIZE = 50;
 const JOYSTICK_RADIUS = JOYSTICK_SIZE / 2;
@@ -48,7 +49,7 @@ export default function RollPitchJoystick({
     bleService.writeCharacteristicWithoutResponse(
       MOTION_SERVICE_UUID,
       ROLLPITCH_CHARACTERISTIC_UUID,
-      angle.toString(),
+      base64.encode(angle.toString()),
     );
   };
 

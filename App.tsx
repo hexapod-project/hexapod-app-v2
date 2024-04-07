@@ -13,6 +13,8 @@ import {AppLightTheme} from './src/theme';
 import {SnackbarProvider} from './src/components/Snackbar';
 import BLEServiceProvider from './src/components/BLEServiceProvider/BLEServiceProvider';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import SpinnerProvider from './src/components/Spinner';
+import HexapodModeCheckerProvider from './src/components/HexapodModeChecker/HexapodModeCheckerProvider';
 
 function App(): React.JSX.Element {
   const theme = AppLightTheme;
@@ -21,11 +23,15 @@ function App(): React.JSX.Element {
     <PaperProvider theme={theme}>
       <NavigationContainer theme={theme}>
         <GestureHandlerRootView>
-          <SnackbarProvider>
-            <BLEServiceProvider>
-              <MainStackNavigator />
-            </BLEServiceProvider>
-          </SnackbarProvider>
+          <SpinnerProvider>
+            <SnackbarProvider>
+              <BLEServiceProvider>
+                <HexapodModeCheckerProvider>
+                  <MainStackNavigator />
+                </HexapodModeCheckerProvider>
+              </BLEServiceProvider>
+            </SnackbarProvider>
+          </SpinnerProvider>
         </GestureHandlerRootView>
       </NavigationContainer>
     </PaperProvider>

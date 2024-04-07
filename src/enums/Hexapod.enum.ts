@@ -1,0 +1,4 @@
+export enum HEXAPOD_MODE {
+  CONTROLLER,
+  CALIBRATE,
+}

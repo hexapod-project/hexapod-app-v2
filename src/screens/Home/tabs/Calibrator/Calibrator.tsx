@@ -2,10 +2,12 @@ import {StyleSheet, View} from 'react-native';
 import {MD3Theme, useTheme} from 'react-native-paper';
 import JointSelector from './components/JointSelector';
 import {TabScreen, Tabs, TabsProvider} from 'react-native-paper-tabs';
-import PWMPeriodCalibrator from './components/PWMCalibrator';
+import PWMPulseCalibrator from './components/PWMPulseCalibrator';
 import ServoTester from './components/ServoTester';
 import {useEffect, useState} from 'react';
 import TabWrapper from '../../../../components/TabWrapper';
+import HexapodModeChecker from '../../../../components/HexapodModeChecker/HexapodModeChecker';
+import {HEXAPOD_MODE} from '../../../../enums/Hexapod.enum';
 
 export default function Calibrator() {
   const theme = useTheme();
@@ -14,7 +16,9 @@ export default function Calibrator() {
   const [activeJoint, setActiveJoint] = useState(1);
 
   return (
-    <View style={styles.container}>
+    <HexapodModeChecker
+      style={styles.container}
+      requiredMode={HEXAPOD_MODE.CALIBRATE}>
       <View style={styles.jointSelectorContainer}>
         <JointSelector
           activeJoint={activeJoint}
@@ -36,7 +40,7 @@ export default function Calibrator() {
             }}
             disableSwipe>
             <TabScreen label="Calibrate" icon={'av-timer'}>
-              <PWMPeriodCalibrator activeJoint={activeJoint} />
+              <PWMPulseCalibrator activeJoint={activeJoint} />
             </TabScreen>
 
             <TabScreen label="Test" icon={'angle-acute'}>
@@ -50,7 +54,7 @@ export default function Calibrator() {
           </Tabs>
         </TabsProvider>
       </View>
-    </View>
+    </HexapodModeChecker>
   );
 }
 

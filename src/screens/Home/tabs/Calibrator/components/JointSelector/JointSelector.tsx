@@ -24,36 +24,36 @@ export default function JointSelector({
     <View style={style.container}>
       <Leg
         style={style.legLeftFront}
-        onSetActive={index => _onJointSelected(index + 1)}
-        isActive={activeJoint <= 3}
+        onSetActive={index => _onJointSelected(index)}
+        isActive={activeJoint <= 2}
       />
       <Leg
         style={style.legLeftMid}
-        onSetActive={index => _onJointSelected(index + 4)}
-        isActive={activeJoint >= 4 && activeJoint <= 6}
+        onSetActive={index => _onJointSelected(index + 3)}
+        isActive={activeJoint >= 3 && activeJoint <= 5}
       />
       <Leg
         style={style.legLeftBack}
-        onSetActive={index => _onJointSelected(index + 7)}
-        isActive={activeJoint >= 7 && activeJoint <= 9}
+        onSetActive={index => _onJointSelected(index + 6)}
+        isActive={activeJoint >= 6 && activeJoint <= 8}
       />
 
       <Body />
 
       <Leg
         style={style.legRightFront}
-        onSetActive={index => _onJointSelected(index + 10)}
-        isActive={activeJoint >= 10 && activeJoint <= 12}
+        onSetActive={index => _onJointSelected(index + 9)}
+        isActive={activeJoint >= 9 && activeJoint <= 11}
       />
       <Leg
         style={style.legRightMid}
-        onSetActive={index => _onJointSelected(index + 13)}
-        isActive={activeJoint >= 13 && activeJoint <= 15}
+        onSetActive={index => _onJointSelected(index + 12)}
+        isActive={activeJoint >= 12 && activeJoint <= 14}
       />
       <Leg
         style={style.legRightBack}
-        onSetActive={() => _onJointSelected(16)}
-        isActive={activeJoint >= 16 && activeJoint <= 18}
+        onSetActive={index => _onJointSelected(index + 15)}
+        isActive={activeJoint >= 15 && activeJoint <= 17}
       />
     </View>
   );

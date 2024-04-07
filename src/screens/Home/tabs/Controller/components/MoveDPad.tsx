@@ -7,6 +7,7 @@ import {
   MOVE_CHARACTERISTIC_UUID,
 } from '../../../../../constants/BLE.constants';
 import {WALK_DIRECTION} from '../../../../../enums/Controller.enums';
+import base64 from 'react-native-base64';
 
 const ICON_SIZE = 40;
 const ICON_PADDING = 8 * 2;
@@ -34,11 +35,19 @@ export default function MoveDPad({name, buttonSize = ICON_SIZE}: DPadProps) {
   const containerSize = iconTotalSize * 2.25;
   const buttonOffset = containerSize / 2 - iconTotalSize / 2;
 
-  const onPress = (walkDirection: WALK_DIRECTION) => {
+  const onPressIn = (walkDirection: WALK_DIRECTION) => {
     bleService.writeCharacteristicWithoutResponse(
       MOTION_SERVICE_UUID,
       MOVE_CHARACTERISTIC_UUID,
-      walkDirection.toString(),
+      base64.encode(walkDirection.toString()),
+    );
+  };
+
+  const onPressOut = () => {
+    bleService.writeCharacteristicWithResponse(
+      MOTION_SERVICE_UUID,
+      MOVE_CHARACTERISTIC_UUID,
+      base64.encode(WALK_DIRECTION.STOP.toString()),
     );
   };
 
@@ -51,32 +60,32 @@ export default function MoveDPad({name, buttonSize = ICON_SIZE}: DPadProps) {
         ]}>
         <DPadButton
           style={[style.up, {left: buttonOffset}]}
-          onPressIn={() => onPress(WALK_DIRECTION.FORWARD)}
-          onPressOut={() => onPress(WALK_DIRECTION.STOP)}
+          onPressIn={() => onPressIn(WALK_DIRECTION.FORWARD)}
+          onPressOut={onPressOut}
           icon={'arrow-up-bold-circle'}
           size={buttonSize}
         />
 
         <DPadButton
           style={[style.down, {left: buttonOffset}]}
-          onPressIn={() => onPress(WALK_DIRECTION.BACKWARD)}
-          onPressOut={() => onPress(WALK_DIRECTION.STOP)}
+          onPressIn={() => onPressIn(WALK_DIRECTION.BACKWARD)}
+          onPressOut={onPressOut}
           icon={'arrow-down-bold-circle'}
           size={buttonSize}
         />
 
         <DPadButton
           style={[style.left, {top: buttonOffset}]}
-          onPressIn={() => onPress(WALK_DIRECTION.LEFT)}
-          onPressOut={() => onPress(WALK_DIRECTION.STOP)}
+          onPressIn={() => onPressIn(WALK_DIRECTION.LEFT)}
+          onPressOut={onPressOut}
           icon={'arrow-left-bold-circle'}
           size={buttonSize}
         />
 
         <DPadButton
           style={[style.right, {top: buttonOffset}]}
-          onPressIn={() => onPress(WALK_DIRECTION.RIGHT)}
-          onPressOut={() => onPress(WALK_DIRECTION.STOP)}
+          onPressIn={() => onPressIn(WALK_DIRECTION.RIGHT)}
+          onPressOut={onPressOut}
           icon={'arrow-right-bold-circle'}
           size={buttonSize}
         />

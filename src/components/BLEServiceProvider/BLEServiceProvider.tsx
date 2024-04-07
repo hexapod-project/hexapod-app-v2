@@ -15,13 +15,13 @@ import {
   BleErrorCode,
   BleManager,
   State as BLEState,
+  Characteristic,
   Device,
   DeviceId,
   LogLevel,
   Subscription,
   UUID,
 } from 'react-native-ble-plx';
-import base64 from 'react-native-base64';
 
 import {useSnackbar} from '../../components/Snackbar';
 import {SCAN_DURATION, SERVICE_UUIDS} from '../../constants/BLE.constants';
@@ -38,6 +38,15 @@ export type BLEServiceContextType = {
     characteristicUUID: UUID,
     value: Base64,
   ) => void;
+  writeCharacteristicWithResponse: (
+    serviceUUID: UUID,
+    characteristicUUID: UUID,
+    value: Base64,
+  ) => Promise<void>;
+  readCharacteristic: (
+    serviceUUID: UUID,
+    characteristicUUID: UUID,
+  ) => Promise<Characteristic | undefined>;
   isScanning: boolean;
   foundDevices: Device[];
   bleState: BLEState;
@@ -49,6 +58,8 @@ export const BLEServiceContext = createContext<BLEServiceContextType>({
   startDeviceScan: () => {},
   stopDeviceScan: () => {},
   writeCharacteristicWithoutResponse: () => {},
+  writeCharacteristicWithResponse: async () => {},
+  readCharacteristic: async () => undefined,
   isScanning: false,
   foundDevices: [],
   bleState: BLEState.Unknown,
@@ -276,7 +287,7 @@ export default function BLEServiceProvider({children}: PropsWithChildren) {
   }, [device, onDeviceDisconnectedSubscriptionRef.current]);
 
   const writeCharacteristicWithoutResponse = useCallback(
-    async (serviceUUID: UUID, characteristicUUID: UUID, value: string) => {
+    async (serviceUUID: UUID, characteristicUUID: UUID, value: Base64) => {
       if (!device) {
         deviceNotConnectedError();
         return;
@@ -287,8 +298,51 @@ export default function BLEServiceProvider({children}: PropsWithChildren) {
           device.id,
           serviceUUID,
           characteristicUUID,
-          base64.encode(value),
+          value,
         );
+      } catch (error: any) {
+        onError(error);
+      }
+    },
+    [device],
+  );
+
+  const writeCharacteristicWithResponse = useCallback(
+    async (serviceUUID: UUID, characteristicUUID: UUID, value: Base64) => {
+      if (!device) {
+        deviceNotConnectedError();
+        return;
+      }
+
+      try {
+        await manager.writeCharacteristicWithResponseForDevice(
+          device.id,
+          serviceUUID,
+          characteristicUUID,
+          value,
+        );
+      } catch (error: any) {
+        onError(error);
+      }
+    },
+    [device],
+  );
+
+  const readCharacteristic = useCallback(
+    async (serviceUUID: UUID, characteristicUUID: UUID) => {
+      if (!device) {
+        deviceNotConnectedError();
+        return;
+      }
+
+      try {
+        const result = await manager.readCharacteristicForDevice(
+          device.id,
+          serviceUUID,
+          characteristicUUID,
+        );
+
+        return result;
       } catch (error: any) {
         onError(error);
       }
@@ -357,7 +411,9 @@ export default function BLEServiceProvider({children}: PropsWithChildren) {
         init,
         startDeviceScan,
         stopDeviceScan,
-        writeCharacteristicWithoutResponse: writeCharacteristicWithoutResponse,
+        writeCharacteristicWithoutResponse,
+        writeCharacteristicWithResponse,
+        readCharacteristic,
         isScanning,
         foundDevices,
         bleState,

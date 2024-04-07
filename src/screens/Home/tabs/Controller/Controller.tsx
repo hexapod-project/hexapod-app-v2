@@ -2,10 +2,14 @@ import {StyleSheet, View} from 'react-native';
 import RollPitchJoystick from './components/RollPitchJoystick';
 import MoveDPad from './components/MoveDPad';
 import RotatePad from './components/RotatePad';
+import HexapodModeChecker from '../../../../components/HexapodModeChecker/HexapodModeChecker';
+import {HEXAPOD_MODE} from '../../../../enums/Hexapod.enum';
 
 export default function Controller() {
   return (
-    <View style={style.controllerContainer}>
+    <HexapodModeChecker
+      style={style.controllerContainer}
+      requiredMode={HEXAPOD_MODE.CONTROLLER}>
       <MoveDPad name={'Move'} buttonSize={80} />
 
       <View style={style.bottomClusterContainer}>
@@ -13,7 +17,7 @@ export default function Controller() {
 
         <RotatePad name={'Rotate'} buttonSize={50} />
       </View>
-    </View>
+    </HexapodModeChecker>
   );
 }
 

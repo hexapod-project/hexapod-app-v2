@@ -12,6 +12,8 @@ import {
   CALIBRATE_SERVICE_UUID,
   MOVE_SERVO_CHARACTERISTIC_UUID,
 } from '../../../../../constants/BLE.constants';
+import {joinByteArrays, numberToBytes} from '../../../../../utils/byte.util';
+import base64 from 'react-native-base64';
 
 const OFFSET_ANGLE = 15;
 const MAX_ANGLE = 150;
@@ -65,10 +67,14 @@ export default function ServoTester({activeJoint}: ServoTesterProps) {
   );
 
   const onMovePress = useCallback(() => {
+    const angleBytes = numberToBytes(displayAngle - MIN_SERVO_ANGLE);
+    const activeJointByte = numberToBytes(activeJoint);
+    const bytes = joinByteArrays(activeJointByte, angleBytes);
+
     bleService.writeCharacteristicWithoutResponse(
       CALIBRATE_SERVICE_UUID,
       MOVE_SERVO_CHARACTERISTIC_UUID,
-      `${activeJoint}|${displayAngle}`,
+      base64.encodeFromByteArray(bytes),
     );
   }, [activeJoint, displayAngle]);
 

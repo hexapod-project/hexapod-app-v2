@@ -8,6 +8,7 @@ import {
   ROTATE_CHARACTERISTIC_UUID,
 } from '../../../../../constants/BLE.constants';
 import {ROTATE_DIRECTION} from '../../../../../enums/Controller.enums';
+import base64 from 'react-native-base64';
 
 const ICON_SIZE = 40;
 
@@ -39,7 +40,7 @@ export default function RotatePad({
     bleService.writeCharacteristicWithoutResponse(
       MOTION_SERVICE_UUID,
       ROTATE_CHARACTERISTIC_UUID,
-      rotateDirection.toString(),
+      base64.encode(rotateDirection.toString()),
     );
   };
 

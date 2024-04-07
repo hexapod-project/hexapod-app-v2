@@ -1,6 +1,6 @@
 import {LayoutChangeEvent, StyleSheet, View} from 'react-native';
 import {Button, IconButton, Text, useTheme} from 'react-native-paper';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {CircleSlider} from '@edw-lee/react-native-circle-slider';
 import {clamp, map} from '../../../../../utils/number.utils';
 import {
@@ -11,8 +11,16 @@ import {degToRad} from '../../../../../utils/geometry.util';
 import {useBLEService} from '../../../../../components/BLEServiceProvider/BLEServiceProvider';
 import {
   CALIBRATE_SERVICE_UUID,
-  SET_PWM_PERIOD_CHARACTERISTIC_UUID,
+  PWM_PULSE_CHARACTERISTIC_UUID,
 } from '../../../../../constants/BLE.constants';
+import {
+  bytesToNumber,
+  joinByteArrays,
+  numberToBytes,
+  stringToBytes,
+} from '../../../../../utils/byte.util';
+import base64 from 'react-native-base64';
+import {useSpinner} from '../../../../../components/Spinner';
 
 const OFFSET_ANGLE = -45;
 const MAX_ANGLE = 270;
@@ -22,14 +30,17 @@ export type PWMPeriodCalibratorProps = {
   activeJoint: number;
 };
 
-export default function PWMPeriodCalibrator({
+export default function PWMPulseCalibrator({
   activeJoint,
 }: PWMPeriodCalibratorProps) {
   const theme = useTheme();
+  const {showSpinner} = useSpinner();
+  const bleService = useBLEService();
+
   const [angle, setAngle] = useState(MAX_ANGLE / 2);
   const [height, setHeight] = useState(0);
   const [heigthOffset, setHeightOffset] = useState(0);
-  const bleService = useBLEService();
+  const [pwmPulses, setPWMPulses] = useState<number[] | undefined>(undefined);
 
   const onCircleSliderUpdate = (_angle: number) => {
     setAngle(_angle);
@@ -73,15 +84,64 @@ export default function PWMPeriodCalibrator({
   );
 
   const onCalibratePress = useCallback(() => {
+    const pwmBytes = numberToBytes(pwm);
+    const activeJointByte = numberToBytes(activeJoint);
+
+    const bytes = joinByteArrays(activeJointByte, pwmBytes);
+
     bleService.writeCharacteristicWithoutResponse(
       CALIBRATE_SERVICE_UUID,
-      SET_PWM_PERIOD_CHARACTERISTIC_UUID,
-      `${activeJoint}|${pwm}`,
+      PWM_PULSE_CHARACTERISTIC_UUID,
+      base64.encodeFromByteArray(bytes),
     );
-  }, [pwm, activeJoint]);
+  }, [bleService.isConnected, pwm, activeJoint]);
+
+  const retrieveCalibrationSettings = async () => {
+    try {
+      showSpinner(true, 'Retrieving calibration settings...');
+      const characteristic = await bleService.readCharacteristic(
+        CALIBRATE_SERVICE_UUID,
+        PWM_PULSE_CHARACTERISTIC_UUID,
+      );
+
+      const value = characteristic?.value
+        ? base64.decode(characteristic.value)
+        : undefined;
+
+      if (value) {
+        const pwmPulses = bytesToNumber(stringToBytes(value));
+        setPWMPulses(pwmPulses);
+      }
+    } catch (error) {
+    } finally {
+      showSpinner(false);
+    }
+  };
+
+  useEffect(() => {
+    if (bleService.isConnected && !pwmPulses) {
+      retrieveCalibrationSettings();
+    }
+  }, [bleService.isConnected, pwmPulses]);
+
+  useEffect(() => {
+    if (!!pwmPulses && pwmPulses?.length > activeJoint) {
+      const pulse = pwmPulses[activeJoint];
+
+      setAngle(map(pulse, MIN_PWM_PERIOD, MAX_PWM_PERIOD, 0, MAX_ANGLE));
+    } else {
+      setAngle(MAX_ANGLE / 2);
+    }
+  }, [activeJoint, pwmPulses]);
 
   return (
     <View style={styles.container}>
+      <IconButton
+        style={styles.refreshButton}
+        icon={'refresh'}
+        onPress={retrieveCalibrationSettings}
+      />
+
       <View style={styles.circleSliderContainer}>
         <View style={[styles.pwmAmountContainer, {paddingTop: heigthOffset}]}>
           <Text style={styles.pwmAmount}>{pwm}</Text>
@@ -148,5 +208,10 @@ const styles = StyleSheet.create({
   pwmAmount: {
     fontWeight: '700',
     fontSize: 40,
+  },
+  refreshButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
 });
