@@ -1,5 +1,5 @@
 import {PropsWithChildren, useCallback} from 'react';
-import {StyleSheet, View} from 'react-native';
+import {Dimensions, StyleSheet, View} from 'react-native';
 import {useBLEService} from '../BLEServiceProvider/BLEServiceProvider';
 import {HEXAPOD_MODE} from '../../enums/Hexapod.enum';
 import {useFocusEffect} from '@react-navigation/native';

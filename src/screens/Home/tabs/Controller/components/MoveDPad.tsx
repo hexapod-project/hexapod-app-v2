@@ -8,6 +8,8 @@ import {
 } from '../../../../../constants/BLE.constants';
 import {WALK_DIRECTION} from '../../../../../enums/Controller.enums';
 import base64 from 'react-native-base64';
+import {useCallback, useRef} from 'react';
+import {ON_PRESSOUT_TIMEOUT} from '../../../../../constants/Controller.constants';
 
 const ICON_SIZE = 40;
 const ICON_PADDING = 8 * 2;
@@ -34,21 +36,31 @@ export default function MoveDPad({name, buttonSize = ICON_SIZE}: DPadProps) {
   const iconTotalSize = buttonSize + ICON_PADDING;
   const containerSize = iconTotalSize * 2.25;
   const buttonOffset = containerSize / 2 - iconTotalSize / 2;
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const onPressIn = (walkDirection: WALK_DIRECTION) => {
-    bleService.writeCharacteristicWithoutResponse(
-      MOTION_SERVICE_UUID,
-      MOVE_CHARACTERISTIC_UUID,
-      base64.encode(walkDirection.toString()),
-    );
-  };
+  const onPressIn = useCallback(
+    (walkDirection: WALK_DIRECTION) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      bleService.writeCharacteristicWithoutResponse(
+        MOTION_SERVICE_UUID,
+        MOVE_CHARACTERISTIC_UUID,
+        base64.encode(walkDirection.toString()),
+      );
+    },
+    [bleService.isConnected, timeoutRef.current],
+  );
 
   const onPressOut = () => {
-    bleService.writeCharacteristicWithResponse(
-      MOTION_SERVICE_UUID,
-      MOVE_CHARACTERISTIC_UUID,
-      base64.encode(WALK_DIRECTION.STOP.toString()),
-    );
+    timeoutRef.current = setTimeout(() => {
+      bleService.writeCharacteristicWithResponse(
+        MOTION_SERVICE_UUID,
+        MOVE_CHARACTERISTIC_UUID,
+        base64.encode(WALK_DIRECTION.STOP.toString()),
+      );
+    }, ON_PRESSOUT_TIMEOUT);
   };
 
   return (

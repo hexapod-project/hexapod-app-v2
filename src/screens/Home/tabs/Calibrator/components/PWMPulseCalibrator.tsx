@@ -21,6 +21,7 @@ import {
 } from '../../../../../utils/byte.util';
 import base64 from 'react-native-base64';
 import {useSpinner} from '../../../../../components/Spinner';
+import {useSnackbar} from '../../../../../components/Snackbar';
 
 const OFFSET_ANGLE = -45;
 const MAX_ANGLE = 270;
@@ -35,6 +36,7 @@ export default function PWMPulseCalibrator({
 }: PWMPeriodCalibratorProps) {
   const theme = useTheme();
   const {showSpinner} = useSpinner();
+  const {showSnackbar} = useSnackbar();
   const bleService = useBLEService();
 
   const [angle, setAngle] = useState(MAX_ANGLE / 2);
@@ -83,18 +85,25 @@ export default function PWMPulseCalibrator({
     [pwm],
   );
 
-  const onCalibratePress = useCallback(() => {
+  const onCalibratePress = useCallback(async () => {
     const pwmBytes = numberToBytes(pwm);
     const activeJointByte = numberToBytes(activeJoint);
 
     const bytes = joinByteArrays(activeJointByte, pwmBytes);
 
-    bleService.writeCharacteristicWithoutResponse(
+    await bleService.writeCharacteristicWithResponse(
       CALIBRATE_SERVICE_UUID,
       PWM_PULSE_CHARACTERISTIC_UUID,
       base64.encodeFromByteArray(bytes),
     );
-  }, [bleService.isConnected, pwm, activeJoint]);
+
+    if (pwmPulses?.at(activeJoint)) {
+      pwmPulses[activeJoint] = pwm;
+      setPWMPulses(pwmPulses.slice());
+    }
+    
+    showSnackbar({message: 'Calibrated successfully.', type: 'success'});
+  }, [bleService.isConnected, pwm, activeJoint, pwmPulses]);
 
   const retrieveCalibrationSettings = async () => {
     try {

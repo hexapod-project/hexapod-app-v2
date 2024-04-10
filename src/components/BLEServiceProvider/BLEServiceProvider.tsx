@@ -42,7 +42,7 @@ export type BLEServiceContextType = {
     serviceUUID: UUID,
     characteristicUUID: UUID,
     value: Base64,
-  ) => Promise<void>;
+  ) => Promise<Characteristic | undefined>;
   readCharacteristic: (
     serviceUUID: UUID,
     characteristicUUID: UUID,
@@ -58,7 +58,7 @@ export const BLEServiceContext = createContext<BLEServiceContextType>({
   startDeviceScan: () => {},
   stopDeviceScan: () => {},
   writeCharacteristicWithoutResponse: () => {},
-  writeCharacteristicWithResponse: async () => {},
+  writeCharacteristicWithResponse: async () => undefined,
   readCharacteristic: async () => undefined,
   isScanning: false,
   foundDevices: [],
@@ -315,12 +315,15 @@ export default function BLEServiceProvider({children}: PropsWithChildren) {
       }
 
       try {
-        await manager.writeCharacteristicWithResponseForDevice(
-          device.id,
-          serviceUUID,
-          characteristicUUID,
-          value,
-        );
+        const characteristic =
+          await manager.writeCharacteristicWithResponseForDevice(
+            device.id,
+            serviceUUID,
+            characteristicUUID,
+            value,
+          );
+
+        return characteristic;
       } catch (error: any) {
         onError(error);
       }

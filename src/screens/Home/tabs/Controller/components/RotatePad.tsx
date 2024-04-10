@@ -9,6 +9,9 @@ import {
 } from '../../../../../constants/BLE.constants';
 import {ROTATE_DIRECTION} from '../../../../../enums/Controller.enums';
 import base64 from 'react-native-base64';
+import {useCallback, useRef} from 'react';
+import {ON_PRESSOUT_TIMEOUT} from '../../../../../constants/Controller.constants';
+import {useRestButton} from './RestButton/RestButtonProvider';
 
 const ICON_SIZE = 40;
 
@@ -35,13 +38,28 @@ export default function RotatePad({
   ...props
 }: RotatePadProps & ViewProps) {
   const bleService = useBLEService();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const {isRest, checkIsRest} = useRestButton();
 
-  const onPress = (rotateDirection: ROTATE_DIRECTION) => {
-    bleService.writeCharacteristicWithoutResponse(
-      MOTION_SERVICE_UUID,
-      ROTATE_CHARACTERISTIC_UUID,
-      base64.encode(rotateDirection.toString()),
-    );
+  const onPress = useCallback(
+    (rotateDirection: ROTATE_DIRECTION) => {
+      bleService.writeCharacteristicWithoutResponse(
+        MOTION_SERVICE_UUID,
+        ROTATE_CHARACTERISTIC_UUID,
+        base64.encode(rotateDirection.toString()),
+      );
+    },
+    [bleService.isConnected, timeoutRef.current],
+  );
+
+  const onPressOut = () => {
+    timeoutRef.current = setTimeout(() => {
+      bleService.writeCharacteristicWithResponse(
+        MOTION_SERVICE_UUID,
+        ROTATE_CHARACTERISTIC_UUID,
+        base64.encode(ROTATE_DIRECTION.STOP.toString()),
+      );
+    }, ON_PRESSOUT_TIMEOUT);
   };
 
   return (
@@ -49,14 +67,14 @@ export default function RotatePad({
       <View style={style.container}>
         <RotatePadButton
           onPressIn={() => onPress(ROTATE_DIRECTION.ROTATE_LEFT)}
-          onPressOut={() => onPress(ROTATE_DIRECTION.STOP)}
+          onPressOut={onPressOut}
           icon={'rotate-left'}
           size={buttonSize}
         />
 
         <RotatePadButton
           onPressIn={() => onPress(ROTATE_DIRECTION.ROTATE_RIGHT)}
-          onPressOut={() => onPress(ROTATE_DIRECTION.STOP)}
+          onPressOut={onPressOut}
           icon={'rotate-right'}
           size={buttonSize}
         />
@@ -72,7 +90,6 @@ const style = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    flexGrow: 1,
   },
   label: {
     textAlign: 'center',

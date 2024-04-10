@@ -12,5 +12,5 @@ export const clampTo360Deg = (deg: number) => {
 export const toPositiveDeg = (deg: number) => {
   if (deg < 0) deg = 360 + deg;
 
-  return deg;
+  return Math.abs(deg);
 };

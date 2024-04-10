@@ -1,5 +1,5 @@
-import {PanResponder, StyleSheet, View} from 'react-native';
-import {Icon, MD3Theme, Text, useTheme} from 'react-native-paper';
+import {StyleSheet, View} from 'react-native';
+import {MD3Theme, Text, useTheme} from 'react-native-paper';
 import {Circle, Svg} from 'react-native-svg';
 import {Animated} from 'react-native';
 import {useEffect, useRef, useState} from 'react';
@@ -11,12 +11,6 @@ import {
   radToDeg,
   toPositiveDeg,
 } from '../../../../../utils/geometry.util';
-import {useBLEService} from '../../../../../components/BLEServiceProvider/BLEServiceProvider';
-import {
-  MOTION_SERVICE_UUID,
-  ROLLPITCH_CHARACTERISTIC_UUID,
-} from '../../../../../constants/BLE.constants';
-import base64 from 'react-native-base64';
 
 const JOYSTICK_SIZE = 50;
 const JOYSTICK_RADIUS = JOYSTICK_SIZE / 2;
@@ -28,15 +22,18 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export type JoystickProps = {
   name?: string;
+  onAngleChanged?: (angle: number) => void;
+  color?: string;
 };
 
-export default function RollPitchJoystick({
+export default function Joystick({
   name,
+  onAngleChanged,
+  color,
   ...props
 }: JoystickProps & ViewProps) {
   const theme = useTheme();
   const style = createStyle(theme);
-  const bleService = useBLEService();
   const [roundedAngle, setRoundedAngle] = useState(-1);
   const [isReleased, setIsReleased] = useState(true);
 
@@ -44,14 +41,6 @@ export default function RollPitchJoystick({
     x: VIEW_SIZE / 2,
     y: VIEW_SIZE / 2,
   });
-
-  const onAngleChanged = (angle: number) => {
-    bleService.writeCharacteristicWithoutResponse(
-      MOTION_SERVICE_UUID,
-      ROLLPITCH_CHARACTERISTIC_UUID,
-      base64.encode(angle.toString()),
-    );
-  };
 
   let {panResponder, pan, x, y} = usePanResponder({
     config: {
@@ -76,22 +65,25 @@ export default function RollPitchJoystick({
   }, []);
 
   useEffect(() => {
-    onAngleChanged(roundedAngle);
+    if (onAngleChanged) {
+      onAngleChanged(roundedAngle);
+    }
   }, [roundedAngle]);
 
   useEffect(() => {
-    const angle = Math.atan2(y, x);
-
-    if (x * x + y * y > CONTAINER_RADIUS * CONTAINER_RADIUS) {
+    if (x * x + y * y >= CONTAINER_RADIUS * CONTAINER_RADIUS) {
+      const angle = Math.atan2(y, x);
       x = Math.cos(angle) * CONTAINER_RADIUS;
       y = Math.sin(angle) * CONTAINER_RADIUS;
+
+      const roundedDeg = toPositiveDeg(Math.ceil(radToDeg(-angle) / 10) * 10);
+
+      if (!isReleased) {
+        setRoundedAngle(toPositiveDeg(clampTo360Deg(roundedDeg)));
+      }
     }
 
-    const roundedDeg = Math.ceil(radToDeg(-angle) / 10) * 10;
-
-    if (!isReleased) {
-      setRoundedAngle(toPositiveDeg(clampTo360Deg(roundedDeg)));
-    } else {
+    if (isReleased) {
       setRoundedAngle(-1);
     }
 
@@ -127,7 +119,7 @@ export default function RollPitchJoystick({
           cx={position.x}
           cy={position.y}
           r={JOYSTICK_RADIUS - 2}
-          fill={theme.colors.elevation.level5}
+          fill={color ?? theme.colors.elevation.level5}
           {...panResponder.panHandlers}
         />
       </Svg>
