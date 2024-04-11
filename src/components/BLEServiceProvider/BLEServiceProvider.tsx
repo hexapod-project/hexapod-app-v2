@@ -86,6 +86,8 @@ export default function BLEServiceProvider({children}: PropsWithChildren) {
       return true;
     }
 
+    console.log(PermissionsAndroid.PERMISSIONS);
+
     if (
       Platform.OS == 'android' &&
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
@@ -171,14 +173,7 @@ export default function BLEServiceProvider({children}: PropsWithChildren) {
     manager.startDeviceScan(SERVICE_UUIDS, {}, (error, device) => {
       if (error) {
         stopDeviceScan();
-
-        console.error(error);
-
-        showSnackbar({
-          message:
-            'Unable to scan at the moment. Please restart your bluetooth and try again.',
-          type: 'error',
-        });
+        onError(error);
         return;
       }
 
@@ -365,6 +360,7 @@ export default function BLEServiceProvider({children}: PropsWithChildren) {
   );
 
   const onError = (error: BleError) => {
+    console.log(error);
     switch (error.errorCode) {
       case BleErrorCode.BluetoothUnauthorized:
         requestBluetoothPermission();
