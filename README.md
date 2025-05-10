@@ -1,79 +1,45 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Hexapod App (v2)
 
-# Getting Started
+This is an app for controlling the [Hexapod Robot (v2)](https://github.com/hexapod-project/hexapod-v2). This is version 2 of the [Hexapod App](https://github.com/hexapod-project/hexapod-app-v1) which has a more straightforward UI, added calibration functions and a more structured code base.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+*Disclaimer: This is a hobby project and has many areas that can be improved on.*
 
-## Step 1: Start the Metro Server
+![Hexapod App](/resources/controller-screen.png)
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
 
-To start Metro, run the following command from the _root_ of your React Native project:
+### Framework
 
-```bash
-# using npm
-npm start
+- React Native
 
-# OR using Yarn
-yarn start
-```
+### Libraries
 
-## Step 2: Start your Application
+- React Native BLE PLX
+- React Native Paper (UI)
+- React Navigation
+- [React Native Circle Slider (edw-lee)](https://github.com/edw-lee/react-native-circle-slider)
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+### High-Level Architecture Diagram
 
-### For Android
+![High-Level Architecture Diagram](/resources/high-level-architecture-diagram.png)
+- The app communicates with the robot through *BLE communication*. 
+- It uses custom GATT services and characteristics to control the robot.
+   - Motion service - controls the robot's move direction, rotation and roll/pitch angle.
+   - Calibrate service - controls the robot's servo calibration by adjusting the servos pulse width to match the physical angle of rotation.
+- In the controller screen, when a movement button is pressed, the app will send the motion data through the motion service with it's respective characteristic which the robot will process and perform the actions accordingly.
+- In the calibrator screen, the app will send the servo pulse width data through the calibrate service. The robot will update the selected servo's pulse width and store it in the nonvolatile memory.
+   
 
-```bash
-# using npm
-npm run android
+### How Calibration Works   
 
-# OR using Yarn
-yarn android
-```
+![Calibrator Screen](/resources/calibrator-screen.png)
+- In the top half of the Calibrartor screen, the user can select a servo by tapping on parts of the hexapod's legs and the selected servo will be highlighted.
+- At the bottom half of the screen, the number shows the pulse width which indicates the neutral position of the selected servo. For example, if the servo is at 1500us pulse width, it should be at 90 degrees of rotation. However, cheaper servos have a small margin of error between the pulse width and the physical angle of rotation.
+- The slider can be used to adjust the pulse width of the selected servo. The number indicates the pulse width for the selected servo at its neutral position which is 90 degrees. The closer the servo's neutral angle can get to 90 degrees the more accurate the robot's movement will be.
+- The calibrator screen has a *Test* tab which allows the user to test each servo's angle of rotation by sending the angle of rotation data to the robot.
+   - This can be used to check if the physical angle of the servo matches the desired angle. If it does not match the angle, the user can calibrate the pulse width and test again.
 
-### For iOS
+### Future Improvements
 
-```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
-
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
-
-## Step 3: Modifying your App
-
-Now that you have successfully run the app, let's modify it.
-
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- Update the controller UI/UX to be more intuitive and easier to control the robot.
+- Make the calibration process automated.
+- Add statistics for the robot such as battery level, temperature, etc.
